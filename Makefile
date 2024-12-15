@@ -4,7 +4,7 @@ all:
 	make proto_build
 	make c2s
 	make c2s_manager
-	make asset
+	make asset_agent
 
 
 proto_build:
@@ -13,9 +13,9 @@ proto_build:
 flush_redis:
 	redis-cli --scan --pattern '*' | xargs redis-cli DEL
 
-asset:
+asset_agent:
 	go clean -cache
-	go build -o asset/bin/asset client/*.go
+	go build -o asset/bin/asset asset/*.go
 	GOOS=windows GOARCH=amd64 go build -o asset/bin/asset.exe  asset/*.go
 
 c2s:
