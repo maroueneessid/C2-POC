@@ -12,6 +12,8 @@ func CommandHandling(client pb.AssetServiceClient, scanner *bufio.Scanner) {
 
 	for {
 		Ping(client)
+		go GetNotified(client)
+
 		fmt.Printf(cli, session)
 		scanner.Scan()
 		input := scanner.Text()

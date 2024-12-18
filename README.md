@@ -16,9 +16,12 @@
 ### Usage ###
 
 * Ensure you're not using a Redis instance with unbacked keys.
+
+* Add your server IP or DNS name to `utils/cert/openssl.cnf`.
 * Start `./server/bin/server`.
 * Start manager. use `help` to get command manual
 * Start `asset` on however many Linux/Windows endpoints you want , should be handled.
+
 
 ### Project Structure ###
 
@@ -30,12 +33,10 @@
 
 ### TODO ###
 
-* Add Notification service to notify managers of events like "New Asset Registration" , "Task Completion" ...
-
 * Add Log Propagation/Sync between Server and Managers. `download` command will download file into the Logging directory that is only available on the Server for now.
 
-* Secure Communications + Add Manager Authentication
-
+* Add Manager Authentication. maybe mTLS
+ 
 
 
 

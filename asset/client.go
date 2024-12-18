@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"log"
 	"os"
 	pb "simpleGRPC/proto_defs"
+	"simpleGRPC/utils"
 	"time"
 
 	"flag"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 const (
@@ -23,8 +24,6 @@ const magic int32 = 0x45344534
 
 var session string = ""
 
-//var connUrl string
-
 func main() {
 
 	connUrl := flag.String("host", "localhost:9001", "host to connect to. In format host:port")
@@ -32,7 +31,12 @@ func main() {
 	flag.Parse()
 	flag.Usage()
 
-	conn, err := grpc.NewClient(*connUrl, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	tlsCred, err := utils.SimpleClientTLS()
+	if err != nil {
+		log.Fatalf("[-] Error loading SSL Cert: %v", err)
+	}
+	conn, err := grpc.NewClient(*connUrl, grpc.WithTransportCredentials(tlsCred))
+
 	if err != nil {
 		Error_check("could not connect to GRPCServer", err)
 	}

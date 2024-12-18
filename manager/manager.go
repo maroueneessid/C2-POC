@@ -2,13 +2,14 @@ package main
 
 import (
 	"bufio"
+	"log"
 	"os"
 	pb "simpleGRPC/proto_defs"
+	"simpleGRPC/utils"
 
 	"flag"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 // Constants for colored output
@@ -29,8 +30,17 @@ func main() {
 	flag.Parse()
 	flag.Usage()
 
-	// Establish connection to gRPC server
-	conn, err := grpc.NewClient(*host, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// load TLS and establish conn
+
+	tlsCred, err := utils.SimpleClientTLS()
+
+	if err != nil {
+		log.Fatalf("[-] Error loading SSL Cert: %v", err)
+	}
+	conn, err := grpc.NewClient(*host,
+		grpc.WithTransportCredentials(tlsCred),
+	)
+
 	ErrorCheck("Could not connect to gRPC Server", err)
 	defer conn.Close()
 

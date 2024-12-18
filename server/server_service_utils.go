@@ -12,13 +12,21 @@ import (
 
 func (s *Server) RegisterAsset(ctx context.Context, assetRegistration *pb.AssetRegistration) (*pb.RegistrationConfirmation, error) {
 
+	// Validate Magic Number
 	if assetRegistration.MagicNb != magic {
 		refusal := pb.RegistrationConfirmation{Confirmed: false}
 		return &refusal, nil
 	}
 
-	fmt.Printf(Yellow+"received connection %s"+Reset+"\n", assetRegistration.SessionId)
+	// Send Notification to the manager through channel
+	notif := &pb.Notification{
+		SessionId: assetRegistration.SessionId,
+		Notif:     "Connection received from ",
+	}
 
+	s.notifs <- notif
+
+	// Set Entry in Redis for new Asset
 	task := &pb.Task{
 		In: &pb.TaskIO{
 			Text:   "",
@@ -41,6 +49,7 @@ func (s *Server) RegisterAsset(ctx context.Context, assetRegistration *pb.AssetR
 		log.Printf("Failed to set Session: %v", err)
 	}
 
+	// Confirm Registration to the Asset
 	acceptance := pb.RegistrationConfirmation{Confirmed: true}
 	return &acceptance, nil
 }
@@ -71,6 +80,11 @@ func (s *Server) SendResponse(ctx context.Context, response *pb.AssetResponse) (
 	if response.Out.Text != "" {
 		//fmt.Println(Yellow, "[!] Received output\n", Reset, response.Out.Text)
 		LogTasks(response.SessionId, "out", response.Out.Text)
+		notif := &pb.Notification{
+			SessionId: response.SessionId,
+			Notif:     "Returned Task Output from ",
+		}
+		s.notifs <- notif
 	}
 
 	// Get the existing session and update the task with the response

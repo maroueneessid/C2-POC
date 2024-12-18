@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
 	pb "simpleGRPC/proto_defs"
 	"time"
 )
 
 func Ping(client pb.AssetServiceClient) bool {
+
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 
 	checkIn := &pb.AssetResponse{
@@ -33,6 +36,32 @@ func Ping(client pb.AssetServiceClient) bool {
 	}
 
 	return false
+}
+
+func GetNotified(client pb.AssetServiceClient) {
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	stream, err := client.Subscribe(ctx, &pb.Notification{})
+
+	if err != nil {
+		log.Fatalf("error subscribing: %v", err)
+	}
+
+	for {
+		notif, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Fatalf("error receiving notifs: %v", err)
+
+		}
+
+		fmt.Printf("\n[!] %s%s %s%s", Yellow, notif.Notif, notif.SessionId, Reset)
+	}
+
 }
 
 func ErrorCheck(context string, err error) {

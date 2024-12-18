@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	pb "simpleGRPC/proto_defs"
+	"simpleGRPC/utils"
 	"strings"
 	"sync"
 
@@ -16,7 +17,8 @@ import (
 
 type Server struct {
 	pb.UnimplementedAssetServiceServer
-	db *redis.Client
+	db     *redis.Client
+	notifs chan *pb.Notification
 }
 
 const (
@@ -28,6 +30,12 @@ const (
 )
 
 func main() {
+
+	tlsCred, err := utils.SimpleServerTLS()
+
+	if err != nil {
+		log.Fatalf("[-] Error loading SSL Cert: %v", err)
+	}
 
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
@@ -43,8 +51,11 @@ func main() {
 
 	fmt.Printf(Green + "[!] Started server on LOCALHOST:9001" + Reset + "\n")
 
-	grpcServer := grpc.NewServer()
-	pb.RegisterAssetServiceServer(grpcServer, &Server{db: redisClient})
+	grpcServer := grpc.NewServer(grpc.Creds(tlsCred))
+
+	notifs := make(chan *pb.Notification, 1000)
+
+	pb.RegisterAssetServiceServer(grpcServer, &Server{db: redisClient, notifs: notifs})
 
 	var wg sync.WaitGroup
 	wg.Add(1)

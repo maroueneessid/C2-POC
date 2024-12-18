@@ -60,6 +60,12 @@ message TaskIO {
 
 
 
+message Notification {
+    string SessionId = 1;
+    string Notif = 2;
+}
+
+
 // Service definition
 service AssetService {
     // Register asset (ServerSide)
@@ -79,8 +85,9 @@ service AssetService {
 
     rpc GetHistory(HistoryQuery) returns (HistoryQuery);
 
+    rpc Subscribe(Notification) returns (stream Notification);
+
 
 }
-
 
 
