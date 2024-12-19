@@ -11,7 +11,7 @@ import (
 
 func Ping(client pb.AssetServiceClient) bool {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 
 	checkIn := &pb.AssetResponse{
 		SessionId: "manager",
@@ -59,7 +59,7 @@ func GetNotified(client pb.AssetServiceClient) {
 
 		}
 
-		fmt.Printf("\n[!] %s%s %s%s", Yellow, notif.Notif, notif.SessionId, Reset)
+		fmt.Printf("\n%s%s %s%s", Yellow, notif.Notif, notif.SessionId, Reset)
 	}
 
 }
@@ -89,5 +89,15 @@ func BuildOrder(cmd string, binContent []byte) *pb.ServerOrder {
 			Binary: binContent,
 		},
 	}
+
+}
+
+func StartListenerOrder(client pb.AssetServiceClient, port uint32) {
+
+	newListener := &pb.Listener{
+		Port: port,
+	}
+
+	client.StartNewListener(context.Background(), newListener)
 
 }

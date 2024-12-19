@@ -3,83 +3,31 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"net"
-	"os"
-	pb "simpleGRPC/proto_defs"
-	"simpleGRPC/utils"
 	"strings"
-	"sync"
-
-	"github.com/redis/go-redis/v9"
-	"google.golang.org/grpc"
 )
 
-type Server struct {
-	pb.UnimplementedAssetServiceServer
-	db     *redis.Client
-	notifs chan *pb.Notification
-}
+// this initial config will be "inherited"
+// (to keep a common notifications channel between multiple service registration , aka Listeners)
+var GlobalConf grpcConfig
 
-const (
-	Red          = "\033[31m"
-	Green        = "\033[32m"
-	Yellow       = "\033[33m"
-	Reset        = "\033[0m"
-	magic  int32 = 0x45344534
-)
+// keep track of listeners
+var GlobalListeners []int
 
 func main() {
 
-	tlsCred, err := utils.SimpleServerTLS()
-
-	if err != nil {
-		log.Fatalf("[-] Error loading SSL Cert: %v", err)
-	}
-
-	redisClient := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-		Protocol: 2,
-	})
-
-	lis, err := net.Listen("tcp", ":9001")
-	if err != nil {
-		Error_check("could not listen", err)
-	}
-
+	GlobalConf = InitGrpcConfig(nil)
+	RegisterListener(GlobalConf.grpcServer, GlobalConf.serverConfig, 9001)
 	fmt.Printf(Green + "[!] Started server on LOCALHOST:9001" + Reset + "\n")
 
-	grpcServer := grpc.NewServer(grpc.Creds(tlsCred))
-
-	notifs := make(chan *pb.Notification, 1000)
-
-	pb.RegisterAssetServiceServer(grpcServer, &Server{db: redisClient, notifs: notifs})
-
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err = grpcServer.Serve(lis)
-		if err != nil {
-			log.Printf("could not serve gRPC server: %v", err)
-		}
-	}()
-
 	for {
+
 		var input string
 		fmt.Print("Enter command 'exit' to stop server:\n> ")
 		fmt.Scanln(&input)
 
-		switch strings.ToLower(input) {
-		case "exit":
-			fmt.Println("Shutting down the server...")
-			grpcServer.GracefulStop()
-			wg.Wait()
-			os.Exit(0)
-		default:
-			fmt.Println("Unknown command. Please try again.")
-		}
+		ciInput := strings.ToLower(input)
+
+		ServerCommandHandler(GlobalConf, ciInput)
+
 	}
 }

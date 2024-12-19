@@ -28,6 +28,7 @@ c2s_manager:
 	go build -o manager/bin/manager manager/*.go
 
 cert_gen :
+	chmod +x ./utils/cert/gen.sh 
 	./utils/cert/gen.sh
 
 .IGNORE clean :

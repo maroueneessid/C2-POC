@@ -156,3 +156,14 @@ func (s *Server) CheckIn(ctx context.Context, checkin *pb.AssetResponse) (*pb.Se
 
 	return toReturn, err
 }
+
+func (s *Server) StartNewListener(ctx context.Context, listener *pb.Listener) (*emptypb.Empty, error) {
+
+	empty := &emptypb.Empty{}
+
+	conf := InitGrpcConfig(GlobalConf.serverConfig.notifs)
+
+	RegisterListener(conf.grpcServer, conf.serverConfig, int(listener.Port))
+
+	return empty, nil
+}

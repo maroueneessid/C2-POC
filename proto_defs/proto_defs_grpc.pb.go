@@ -20,13 +20,14 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AssetService_RegisterAsset_FullMethodName = "/AssetService/RegisterAsset"
-	AssetService_SendOrder_FullMethodName     = "/AssetService/SendOrder"
-	AssetService_SendResponse_FullMethodName  = "/AssetService/SendResponse"
-	AssetService_CheckIn_FullMethodName       = "/AssetService/CheckIn"
-	AssetService_CheckSession_FullMethodName  = "/AssetService/CheckSession"
-	AssetService_GetHistory_FullMethodName    = "/AssetService/GetHistory"
-	AssetService_Subscribe_FullMethodName     = "/AssetService/Subscribe"
+	AssetService_RegisterAsset_FullMethodName    = "/AssetService/RegisterAsset"
+	AssetService_SendOrder_FullMethodName        = "/AssetService/SendOrder"
+	AssetService_SendResponse_FullMethodName     = "/AssetService/SendResponse"
+	AssetService_CheckIn_FullMethodName          = "/AssetService/CheckIn"
+	AssetService_CheckSession_FullMethodName     = "/AssetService/CheckSession"
+	AssetService_GetHistory_FullMethodName       = "/AssetService/GetHistory"
+	AssetService_Subscribe_FullMethodName        = "/AssetService/Subscribe"
+	AssetService_StartNewListener_FullMethodName = "/AssetService/StartNewListener"
 )
 
 // AssetServiceClient is the client API for AssetService service.
@@ -45,6 +46,7 @@ type AssetServiceClient interface {
 	CheckSession(ctx context.Context, in *None, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Session], error)
 	GetHistory(ctx context.Context, in *HistoryQuery, opts ...grpc.CallOption) (*HistoryQuery, error)
 	Subscribe(ctx context.Context, in *Notification, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Notification], error)
+	StartNewListener(ctx context.Context, in *Listener, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type assetServiceClient struct {
@@ -143,6 +145,16 @@ func (c *assetServiceClient) Subscribe(ctx context.Context, in *Notification, op
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type AssetService_SubscribeClient = grpc.ServerStreamingClient[Notification]
 
+func (c *assetServiceClient) StartNewListener(ctx context.Context, in *Listener, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, AssetService_StartNewListener_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AssetServiceServer is the server API for AssetService service.
 // All implementations must embed UnimplementedAssetServiceServer
 // for forward compatibility.
@@ -159,6 +171,7 @@ type AssetServiceServer interface {
 	CheckSession(*None, grpc.ServerStreamingServer[Session]) error
 	GetHistory(context.Context, *HistoryQuery) (*HistoryQuery, error)
 	Subscribe(*Notification, grpc.ServerStreamingServer[Notification]) error
+	StartNewListener(context.Context, *Listener) (*emptypb.Empty, error)
 	mustEmbedUnimplementedAssetServiceServer()
 }
 
@@ -189,6 +202,9 @@ func (UnimplementedAssetServiceServer) GetHistory(context.Context, *HistoryQuery
 }
 func (UnimplementedAssetServiceServer) Subscribe(*Notification, grpc.ServerStreamingServer[Notification]) error {
 	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
+}
+func (UnimplementedAssetServiceServer) StartNewListener(context.Context, *Listener) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method StartNewListener not implemented")
 }
 func (UnimplementedAssetServiceServer) mustEmbedUnimplementedAssetServiceServer() {}
 func (UnimplementedAssetServiceServer) testEmbeddedByValue()                      {}
@@ -323,6 +339,24 @@ func _AssetService_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
 type AssetService_SubscribeServer = grpc.ServerStreamingServer[Notification]
 
+func _AssetService_StartNewListener_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Listener)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AssetServiceServer).StartNewListener(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AssetService_StartNewListener_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AssetServiceServer).StartNewListener(ctx, req.(*Listener))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AssetService_ServiceDesc is the grpc.ServiceDesc for AssetService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -349,6 +383,10 @@ var AssetService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetHistory",
 			Handler:    _AssetService_GetHistory_Handler,
+		},
+		{
+			MethodName: "StartNewListener",
+			Handler:    _AssetService_StartNewListener_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

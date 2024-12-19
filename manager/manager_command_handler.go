@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	pb "simpleGRPC/proto_defs"
+	"strconv"
 	"strings"
 )
 
@@ -115,6 +116,20 @@ func CommandHandling(client pb.AssetServiceClient, scanner *bufio.Scanner) {
 			if rt != nil {
 				continue
 			}
+
+		case "listen":
+			if len(parts) != 2 {
+				fmt.Println(Yellow + "Usage: listen <port_number>" + Reset)
+				continue
+			}
+			portStr := parts[1]
+			portInt, err := strconv.ParseUint(portStr, 10, 32)
+			if err != nil {
+				fmt.Println(Yellow + "Invalid port number" + Reset)
+				continue
+			}
+			finalPort := uint32(portInt)
+			StartListenerOrder(client, finalPort)
 
 		case "exit":
 			fmt.Println("Exiting Manager...")

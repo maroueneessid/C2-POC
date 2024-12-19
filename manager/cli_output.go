@@ -27,7 +27,7 @@ func tableWriter(session *pb.Session) {
 	}
 
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"SessionId", "Hostname", "Username", "OS", "IPs", "Last Task"})
+	table.SetHeader([]string{"SessionId", "Hostname", "Username", "IPs", "OS", "Last Task"})
 
 	table.Append(infoSlice)
 
@@ -43,7 +43,8 @@ Commands:
   upload			: Uploads src to dest. "upload path/to/file destination/path/file"
   download			: Downloads specified file to sessions download dir.
   sessions [alive]	: Displays all sessions. "sessiions alive" returns only alive sessions
-  history			: fetches log file for specific session (for now fetches the whole file)
+  history			: fetches log file for specific session (for now fetches the whole file
+  listen <port>		: Start listener on specified port
   kill				: kills a session (only valid when inside a session)
   clear				: clear terminal
   help				: Display this help message

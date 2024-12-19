@@ -8,6 +8,12 @@ SERVER_CERT="$SERVER_DIR/server.crt"
 SERVER_CSR="$SERVER_DIR/server.csr"
 CONFIG_FILE="$SCRIPT_DIR/openssl.cnf"
 
+
+if [ ! -d $SERVER_DIR ]
+then
+    mkdir $SERVER_DIR
+fi
+
 openssl genrsa -out $SERVER_KEY 4096
 
 openssl req -new -key $SERVER_KEY -out $SERVER_CSR -config $CONFIG_FILE

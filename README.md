@@ -29,14 +29,16 @@
 
 ### Notes ###
 
-* It is assumed for now that `Server` and `Manager` will be running on the same host (even though multiple remote Managers are handled) , because of elements of the *TODO* section below
+* Logs (session command history + downloads dir ) are only stored on the server and not available to remote Managers. `download` command will download file into the Logging directory that is only available on the Server for now.
 
 ### TODO ###
 
-* Add Log Propagation/Sync between Server and Managers. `download` command will download file into the Logging directory that is only available on the Server for now.
+* Add Log Propagation/Sync between Server and Managers. Rsync?
 
 * Add Manager Authentication. maybe mTLS
- 
+
+* Enum + Stop new listerners
+* Make Listeners persistent accross Server Restarrts
 
 
 

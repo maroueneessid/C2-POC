@@ -65,6 +65,11 @@ message Notification {
     string Notif = 2;
 }
 
+message Listener {
+    uint32 port = 1;
+
+}
+
 
 // Service definition
 service AssetService {
@@ -86,6 +91,8 @@ service AssetService {
     rpc GetHistory(HistoryQuery) returns (HistoryQuery);
 
     rpc Subscribe(Notification) returns (stream Notification);
+
+    rpc StartNewListener(Listener) returns (google.protobuf.Empty);
 
 
 }
