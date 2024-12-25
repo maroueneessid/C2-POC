@@ -6,7 +6,8 @@ import (
 	"log"
 	"os"
 	"path"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
+	pb_man "simpleGRPC/proto_defs/manager"
 
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/protobuf/proto"
@@ -41,10 +42,10 @@ func GetLogPath(sessionId string, logType string) (string, error) {
 	return tr, nil
 }
 
-func (s *Server) GetHistory(ctx context.Context, query *pb.HistoryQuery) (*pb.HistoryQuery, error) {
+func (s *Server) GetHistory(ctx context.Context, query *pb_man.HistoryQuery) (*pb_man.HistoryQuery, error) {
 
 	log, err := GetSessionLog(query.SessionId)
-	tr := &pb.HistoryQuery{
+	tr := &pb_man.HistoryQuery{
 		SessionId: query.SessionId,
 		History:   log,
 	}
@@ -129,7 +130,7 @@ func GetSessionLog(sessionId string) (string, error) {
 }
 
 func Error_check(c string, e error) error {
-	log.Printf("%s : %v", c, e)
+	log.Printf("%s : %v\n", c, e)
 	return e
 }
 
@@ -159,7 +160,7 @@ func (s *Server) GetAndSetSession(ctx context.Context, sessionId string, newSess
 	return &session, nil
 }
 
-func (s *Server) CheckSession(empty *pb.None, stream pb.AssetService_CheckSessionServer) error {
+func (s *Server) CheckSession(empty *pb.None, stream pb_man.ManagerAsset_CheckSessionServer) error {
 
 	keys, _ := s.db.Keys(stream.Context(), "*").Result()
 

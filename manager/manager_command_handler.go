@@ -4,15 +4,20 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	pb "simpleGRPC/proto_defs"
 	"strconv"
+
+	pb "simpleGRPC/proto_defs/common"
+	pb_man "simpleGRPC/proto_defs/manager"
+
 	"strings"
 )
 
-func CommandHandling(client pb.AssetServiceClient, scanner *bufio.Scanner) {
+func CommandHandling(pingClient pb.AssetServiceClient, client pb_man.ManagerAssetClient, scanner *bufio.Scanner) {
 
 	for {
-		Ping(client)
+
+		//Ping(pingClient)
+
 		go GetNotified(client)
 
 		fmt.Printf(cli, session)
@@ -130,6 +135,20 @@ func CommandHandling(client pb.AssetServiceClient, scanner *bufio.Scanner) {
 			}
 			finalPort := uint32(portInt)
 			StartListenerOrder(client, finalPort)
+
+		case "stop":
+			if len(parts) != 2 {
+				fmt.Println(Yellow + "Usage: listen <port_number>" + Reset)
+				continue
+			}
+			portStr := parts[1]
+			portInt, err := strconv.ParseUint(portStr, 10, 32)
+			if err != nil {
+				fmt.Println(Yellow + "Invalid port number" + Reset)
+				continue
+			}
+			finalPort := uint32(portInt)
+			KillListenerWrapper(client, int(finalPort))
 
 		case "exit":
 			fmt.Println("Exiting Manager...")

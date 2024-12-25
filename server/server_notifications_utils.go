@@ -1,10 +1,10 @@
 package main
 
 import (
-	pb "simpleGRPC/proto_defs"
+	pb_man "simpleGRPC/proto_defs/manager"
 )
 
-func (s *Server) Subscribe(req *pb.Notification, stream pb.AssetService_SubscribeServer) error {
+func (s *Server) Subscribe(req *pb_man.Notification, stream pb_man.ManagerAsset_SubscribeServer) error {
 
 	for {
 		select {

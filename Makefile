@@ -9,7 +9,8 @@ all:
 
 
 proto_build:
-	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=./ --go-grpc_opt=paths=source_relative ./proto_defs/proto_defs.proto
+	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=./ --go-grpc_opt=paths=source_relative ./proto_defs/common/common.proto
+	protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=./ --go-grpc_opt=paths=source_relative ./proto_defs/manager/manager.proto
 
 flush_redis:
 	redis-cli --scan --pattern '*' | xargs redis-cli DEL
@@ -33,6 +34,6 @@ cert_gen :
 
 .IGNORE clean :
 	rm */bin/*
-	//rm ./proto_defs/*.go
+	//rm ./proto_defs/*/*.go
 	rm -rf ~/.customC2/*
 	rm ./utils/cert/server/*

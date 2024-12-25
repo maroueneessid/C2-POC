@@ -4,26 +4,53 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"os"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
+	pb_man "simpleGRPC/proto_defs/manager"
 	"simpleGRPC/utils"
-	"strings"
 	"sync"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 type Server struct {
 	pb.UnimplementedAssetServiceServer
+	pb_man.ManagerAssetServer
 	db     *redis.Client
-	notifs chan *pb.Notification
+	notifs chan *pb_man.Notification
 }
 
 type grpcConfig struct {
 	grpcServer   *grpc.Server
 	serverConfig *Server
 }
+
+var (
+
+	// this initial config will be "inherited"
+	// (to keep a common notifications channel between multiple service registration , aka Listeners)
+	GlobalConf grpcConfig
+
+	// track and manage listeners
+	GlobalListeners map[int]chan bool
+
+	kaep = keepalive.EnforcementPolicy{
+		MinTime:             5 * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
+		PermitWithoutStream: false,           // Allow pings even when there are no active streams
+	}
+
+	kasp = keepalive.ServerParameters{
+
+		//MaxConnectionIdle:     15 * time.Second, // If a client is idle for 15 seconds, send a GOAWAY
+		//MaxConnectionAge:      30 * time.Second, // If any connection is alive for more than 30 seconds, send a GOAWAY
+		MaxConnectionAgeGrace: 5 * time.Second, // Allow 5 seconds for pending RPCs to complete before forcibly closing connections
+		Time:                  5 * time.Second, // Ping the client if it is idle for 5 seconds to ensure the connection is still active
+		Timeout:               5 * time.Second, // Wait 1 second for the ping ack before assuming the connection is dead
+
+	}
+)
 
 const (
 	Red          = "\033[31m"
@@ -33,24 +60,38 @@ const (
 	magic  int32 = 0x45344534
 )
 
-func RegisterListener(grpcServer *grpc.Server, serverConfig *Server, port int) error {
-
-	// Anon function to check if port already listening
-	checkPresence := func(arr []int, target int) bool {
-		for _, v := range arr {
-			if v == target {
-				return true
-			}
-		}
-		return false
+func RegisterManagerListener(grpcServer *grpc.Server, serverConfig *Server, port int) error {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	if err != nil {
+		Error_check("could not listen", err)
 	}
 
+	pb_man.RegisterManagerAssetServer(grpcServer, serverConfig)
+
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		err = grpcServer.Serve(lis)
+		if err != nil {
+			log.Printf("Starting Remote manager failed: %v", err)
+		}
+	}()
+
+	return nil
+
+}
+
+func RegisterAssetListener(grpcServer *grpc.Server, serverConfig *Server, port int) error {
+
 	// Only append non used ports
-	if !checkPresence(GlobalListeners, port) {
-		GlobalListeners = append(GlobalListeners, port)
+	if !ListenerPresence(GlobalListeners, port) {
+
+		GlobalListeners[port] = make(chan bool)
+
 		// no sending listener setup notification for the original port
 		if port != 9001 {
-			tr := &pb.Notification{
+			tr := &pb_man.Notification{
 				SessionId: "",
 				Notif:     fmt.Sprintf(Green + "[+] Listener up" + Reset + "\n"),
 			}
@@ -58,7 +99,7 @@ func RegisterListener(grpcServer *grpc.Server, serverConfig *Server, port int) e
 		}
 
 	} else {
-		tr := &pb.Notification{
+		tr := &pb_man.Notification{
 			SessionId: "",
 			Notif:     fmt.Sprintf(Red + "[!] Listener already established" + Reset + "\n"),
 		}
@@ -68,24 +109,28 @@ func RegisterListener(grpcServer *grpc.Server, serverConfig *Server, port int) e
 
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
-		Error_check("could not listen", err)
+		tr := &pb_man.Notification{Notif: fmt.Sprintf("%v", Error_check("could not listen", err))}
+		GlobalConf.serverConfig.notifs <- tr
+		return nil
 	}
 
 	pb.RegisterAssetServiceServer(grpcServer, serverConfig)
-	var wg sync.WaitGroup
-	wg.Add(1)
+
 	go func() {
-		defer wg.Done()
+
 		err = grpcServer.Serve(lis)
 		if err != nil {
-			log.Printf("could not serve gRPC server: %v", err)
+			log.Printf("Asset Listener Failed: %v", err)
 		}
 	}()
+
+	<-GlobalListeners[port]
+	grpcServer.GracefulStop()
 
 	return nil
 }
 
-func InitGrpcConfig(notifs chan *pb.Notification) grpcConfig {
+func InitGrpcConfig(notifs chan *pb_man.Notification) grpcConfig {
 
 	tlsCred, err := utils.SimpleServerTLS()
 
@@ -101,34 +146,16 @@ func InitGrpcConfig(notifs chan *pb.Notification) grpcConfig {
 	})
 
 	if notifs == nil {
-		notifs = make(chan *pb.Notification, 1000)
+		notifs = make(chan *pb_man.Notification, 1000)
 
 	}
 
-	grpcServer := grpc.NewServer(grpc.Creds(tlsCred))
+	grpcServer := grpc.NewServer(grpc.Creds(tlsCred), grpc.KeepaliveEnforcementPolicy(kaep), grpc.KeepaliveParams(kasp))
 
 	serverConfig := &Server{db: redisClient, notifs: notifs}
 
 	tr := grpcConfig{grpcServer, serverConfig}
 
 	return tr
-
-}
-
-func ServerCommandHandler(conf grpcConfig, in string) {
-
-	for {
-		if len(strings.Fields(in)) == 0 {
-			break
-		}
-		switch strings.Fields(in)[0] {
-		case "exit":
-			fmt.Println("Shutting down the server...")
-			conf.grpcServer.GracefulStop()
-			os.Exit(0)
-		default:
-			fmt.Println("Unknown command. Please try again.")
-		}
-	}
 
 }

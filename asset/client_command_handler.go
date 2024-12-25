@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
 	"strings"
 )
 

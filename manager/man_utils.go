@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
+	pb_man "simpleGRPC/proto_defs/manager"
 	"time"
 )
 
@@ -20,9 +21,10 @@ func Ping(client pb.AssetServiceClient) bool {
 			Binary: []byte{},
 		},
 	}
-	defer cancel()
 
 	pinged, _ := client.CheckIn(ctx, checkIn)
+
+	defer cancel()
 
 	select {
 	case <-ctx.Done():
@@ -38,12 +40,12 @@ func Ping(client pb.AssetServiceClient) bool {
 	return false
 }
 
-func GetNotified(client pb.AssetServiceClient) {
+func GetNotified(client pb_man.ManagerAssetClient) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	stream, err := client.Subscribe(ctx, &pb.Notification{})
+	stream, err := client.Subscribe(ctx, &pb_man.Notification{})
 
 	if err != nil {
 		log.Fatalf("error subscribing: %v", err)
@@ -92,12 +94,11 @@ func BuildOrder(cmd string, binContent []byte) *pb.ServerOrder {
 
 }
 
-func StartListenerOrder(client pb.AssetServiceClient, port uint32) {
+func StartListenerOrder(client pb_man.ManagerAssetClient, port uint32) {
 
-	newListener := &pb.Listener{
+	newListener := &pb_man.Listener{
 		Port: port,
 	}
-
 	client.StartNewListener(context.Background(), newListener)
 
 }

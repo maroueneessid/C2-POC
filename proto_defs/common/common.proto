@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+option go_package = "simpleGRPC/proto_defs/common";
+
+import "google/protobuf/empty.proto";
+
+
+
+message Session {
+    AssetRegistration basicInfo = 1;
+    Task task = 2;
+    bool alive = 3;
+}
+
+message None { }
+
+
+
+message AssetRegistration {
+    sfixed32 MagicNb = 1; 
+    string SessionId = 2;
+    string Hostname = 3;
+    string Username = 4;
+    string OS = 5;
+    repeated string IP = 6;
+}
+
+
+message ServerOrder {
+    string SessionId = 1;
+    TaskIO in = 2;
+
+}
+
+message RegistrationConfirmation {
+    bool Confirmed = 1;
+}
+
+message AssetResponse {
+    string SessionId = 1;
+    TaskIO out = 2;
+}
+
+
+message Task {
+    TaskIO in = 1;
+    TaskIO out = 2;
+
+}
+
+message TaskIO {
+    string Text = 1;
+    bytes Binary = 2;
+}
+
+
+
+service AssetService {
+
+
+    rpc RegisterAsset(AssetRegistration) returns (RegistrationConfirmation);
+
+    rpc SendResponse(AssetResponse) returns (google.protobuf.Empty);
+
+    rpc CheckIn(AssetResponse) returns (ServerOrder);
+
+    
+}
+
+

@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option go_package = "simpleGRPC/proto_defs/manager";
+
+import "google/protobuf/empty.proto";
+import "proto_defs/common/common.proto";
+
+
+
+
+message Notification {
+    string SessionId = 1;
+    string Notif = 2;
+}
+
+message Listener {
+    uint32 port = 1;
+
+}
+
+
+message HistoryQuery {
+    string SessionId = 1;
+    string History = 2;
+}
+
+service ManagerAsset {
+
+
+    rpc SendOrder(ServerOrder) returns (google.protobuf.Empty);
+
+    rpc CheckSession(None) returns (stream Session);
+
+    rpc GetHistory(HistoryQuery) returns (HistoryQuery);
+
+    rpc Subscribe(Notification) returns (stream Notification);
+
+    rpc StartNewListener(Listener) returns (google.protobuf.Empty);
+
+    rpc KillListener(Listener) returns (google.protobuf.Empty);
+
+}
+
+

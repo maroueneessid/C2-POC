@@ -9,7 +9,7 @@ import (
 	"os/exec"
 	"os/user"
 	"runtime"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
 	"strings"
 
 	"github.com/elastic/go-sysinfo"

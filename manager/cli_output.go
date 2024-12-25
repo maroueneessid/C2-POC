@@ -2,7 +2,7 @@ package main
 
 import (
 	"os"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
 	"strings"
 
 	"github.com/olekukonko/tablewriter"
@@ -45,6 +45,7 @@ Commands:
   sessions [alive]	: Displays all sessions. "sessiions alive" returns only alive sessions
   history			: fetches log file for specific session (for now fetches the whole file
   listen <port>		: Start listener on specified port
+  stop <port>		: Stops listener on specfied port
   kill				: kills a session (only valid when inside a session)
   clear				: clear terminal
   help				: Display this help message

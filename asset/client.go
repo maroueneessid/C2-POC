@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
 	"simpleGRPC/utils"
 	"time"
 

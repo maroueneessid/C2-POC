@@ -6,17 +6,13 @@ import (
 	"strings"
 )
 
-// this initial config will be "inherited"
-// (to keep a common notifications channel between multiple service registration , aka Listeners)
-var GlobalConf grpcConfig
-
-// keep track of listeners
-var GlobalListeners []int
-
 func main() {
 
 	GlobalConf = InitGrpcConfig(nil)
-	RegisterListener(GlobalConf.grpcServer, GlobalConf.serverConfig, 9001)
+	RegisterManagerListener(GlobalConf.grpcServer, GlobalConf.serverConfig, 9001)
+
+	GlobalListeners = make(map[int]chan bool)
+
 	fmt.Printf(Green + "[!] Started server on LOCALHOST:9001" + Reset + "\n")
 
 	for {

@@ -33,12 +33,11 @@
 
 ### TODO ###
 
-* Add Log Propagation/Sync between Server and Managers. Rsync?
+* Add Log Propagation/Sync between Server and Managers. Rsync? comes after manager auth
 
-* Add Manager Authentication. maybe mTLS
+* Add Manager Authentication. mTLS
 
-* Enum + Stop new listerners
-* Make Listeners persistent accross Server Restarrts
+* Make Listeners persistent accross Server Restarts
 
 
 

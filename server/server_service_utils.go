@@ -5,7 +5,8 @@ import (
 	"crypto/md5"
 	"fmt"
 	"log"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
+	pb_man "simpleGRPC/proto_defs/manager"
 
 	"google.golang.org/protobuf/types/known/emptypb"
 )
@@ -19,7 +20,7 @@ func (s *Server) RegisterAsset(ctx context.Context, assetRegistration *pb.AssetR
 	}
 
 	// Send Notification to the manager through channel
-	notif := &pb.Notification{
+	notif := &pb_man.Notification{
 		SessionId: assetRegistration.SessionId,
 		Notif:     "Connection received from ",
 	}
@@ -78,9 +79,10 @@ func (s *Server) SendOrder(ctx context.Context, order *pb.ServerOrder) (*emptypb
 
 func (s *Server) SendResponse(ctx context.Context, response *pb.AssetResponse) (*emptypb.Empty, error) {
 	if response.Out.Text != "" {
+
 		//fmt.Println(Yellow, "[!] Received output\n", Reset, response.Out.Text)
 		LogTasks(response.SessionId, "out", response.Out.Text)
-		notif := &pb.Notification{
+		notif := &pb_man.Notification{
 			SessionId: response.SessionId,
 			Notif:     "Returned Task Output from ",
 		}
@@ -117,6 +119,7 @@ func (s *Server) CheckIn(ctx context.Context, checkin *pb.AssetResponse) (*pb.Se
 
 	// Ping function from the manager
 	if session == "manager" {
+
 		//log.Printf("Failed to get Session from Redis for SessionId %s", session)
 		return &pb.ServerOrder{
 			SessionId: session,
@@ -157,13 +160,33 @@ func (s *Server) CheckIn(ctx context.Context, checkin *pb.AssetResponse) (*pb.Se
 	return toReturn, err
 }
 
-func (s *Server) StartNewListener(ctx context.Context, listener *pb.Listener) (*emptypb.Empty, error) {
+func (s *Server) StartNewListener(ctx context.Context, listener *pb_man.Listener) (*emptypb.Empty, error) {
 
 	empty := &emptypb.Empty{}
 
 	conf := InitGrpcConfig(GlobalConf.serverConfig.notifs)
 
-	RegisterListener(conf.grpcServer, conf.serverConfig, int(listener.Port))
+	go RegisterAssetListener(conf.grpcServer, conf.serverConfig, int(listener.Port))
 
 	return empty, nil
+}
+
+func (s *Server) KillListener(ctx context.Context, listener *pb_man.Listener) (*emptypb.Empty, error) {
+
+	if ListenerPresence(GlobalListeners, int(listener.Port)) {
+		KillListenerHelper(GlobalListeners, int(listener.Port))
+		tr := &pb_man.Notification{
+			SessionId: "",
+			Notif:     fmt.Sprintf(Red+"[!] Listener on %d Stopped"+Reset+"\n", int(listener.Port)),
+		}
+		GlobalConf.serverConfig.notifs <- tr
+	} else {
+		tr := &pb_man.Notification{
+			SessionId: "",
+			Notif:     fmt.Sprintf(Yellow+"[!] Listener on %d is not active"+Reset+"\n", int(listener.Port)),
+		}
+		GlobalConf.serverConfig.notifs <- tr
+	}
+
+	return &emptypb.Empty{}, nil
 }

@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
-	pb "simpleGRPC/proto_defs"
+	pb "simpleGRPC/proto_defs/common"
+	pb_man "simpleGRPC/proto_defs/manager"
 	"time"
 )
 
-func SendOrderFromManager(client pb.AssetServiceClient, order *pb.ServerOrder) error {
+func SendOrderFromManager(client pb_man.ManagerAssetClient, order *pb.ServerOrder) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	_, err := client.SendOrder(ctx, order)
@@ -23,7 +24,7 @@ func SendOrderFromManager(client pb.AssetServiceClient, order *pb.ServerOrder) e
 	return nil
 }
 
-func GetAllSessions(client pb.AssetServiceClient, onlyAlive bool) {
+func GetAllSessions(client pb_man.ManagerAssetClient, onlyAlive bool) {
 
 	req := pb.None{}
 
@@ -59,7 +60,7 @@ func GetAllSessions(client pb.AssetServiceClient, onlyAlive bool) {
 	}
 }
 
-func KillAll(client pb.AssetServiceClient) {
+func KillAll(client pb_man.ManagerAssetClient) {
 	req := pb.None{}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
@@ -98,11 +99,11 @@ func KillAll(client pb.AssetServiceClient) {
 	}
 }
 
-func FetchSessionHistory(client pb.AssetServiceClient, sessionId string) string {
+func FetchSessionHistory(client pb_man.ManagerAssetClient, sessionId string) string {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
-	topass := &pb.HistoryQuery{
+	topass := &pb_man.HistoryQuery{
 		SessionId: sessionId,
 		History:   "",
 	}
@@ -113,5 +114,13 @@ func FetchSessionHistory(client pb.AssetServiceClient, sessionId string) string 
 	}
 
 	return tr.History
+
+}
+
+func KillListenerWrapper(c pb_man.ManagerAssetClient, port int) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	c.KillListener(ctx, &pb_man.Listener{Port: uint32(port)})
 
 }
