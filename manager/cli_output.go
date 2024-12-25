@@ -39,14 +39,14 @@ func PrintHelp() string {
 	return `
 Commands:
   use <sessionId>	: Switch to a specific session
-  exec <command>	: Execute a command on the server (only 'shell' for now)
+  exec shell <cmd>	: Execute a cmd/shell command on asset
   upload			: Uploads src to dest. "upload path/to/file destination/path/file"
   download			: Downloads specified file to sessions download dir.
-  sessions [alive]	: Displays all sessions. "sessiions alive" returns only alive sessions
-  history			: fetches log file for specific session (for now fetches the whole file
+  sessions [alive]	: Displays all sessions. "sessions alive" returns only alive sessions
+  history			: fetches log file for specific session (for now fetches the whole file)
   listen <port>		: Start listener on specified port
   stop <port>		: Stops listener on specfied port
-  kill				: kills a session (only valid when inside a session)
+  kill [all]		: kills a session (only valid when inside a session). "kill all" inside or outside any sessions to kill all active sessions
   clear				: clear terminal
   help				: Display this help message
   exit				: Exit the manager

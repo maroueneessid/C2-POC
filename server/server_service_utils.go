@@ -167,6 +167,7 @@ func (s *Server) StartNewListener(ctx context.Context, listener *pb_man.Listener
 	conf := InitGrpcConfig(GlobalConf.serverConfig.notifs)
 
 	go RegisterAssetListener(conf.grpcServer, conf.serverConfig, int(listener.Port))
+	UpdatePortPersistenceConfig()
 
 	return empty, nil
 }
@@ -180,6 +181,8 @@ func (s *Server) KillListener(ctx context.Context, listener *pb_man.Listener) (*
 			Notif:     fmt.Sprintf(Red+"[!] Listener on %d Stopped"+Reset+"\n", int(listener.Port)),
 		}
 		GlobalConf.serverConfig.notifs <- tr
+		UpdatePortPersistenceConfig()
+
 	} else {
 		tr := &pb_man.Notification{
 			SessionId: "",

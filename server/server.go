@@ -9,11 +9,11 @@ import (
 func main() {
 
 	GlobalConf = InitGrpcConfig(nil)
-	RegisterManagerListener(GlobalConf.grpcServer, GlobalConf.serverConfig, 9001)
-
+	RegisterManagerListener(GlobalConf.grpcServer, GlobalConf.serverConfig, GLOBAL_PORT)
 	GlobalListeners = make(map[int]chan bool)
+	fmt.Printf(Green+"[!] Started server on LOCALHOST:%d"+Reset+"\n", GLOBAL_PORT)
 
-	fmt.Printf(Green + "[!] Started server on LOCALHOST:9001" + Reset + "\n")
+	InitPortPersistenceConfig(GlobalConf.serverConfig)
 
 	for {
 

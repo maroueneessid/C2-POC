@@ -24,6 +24,8 @@ func GetLogPath(sessionId string, logType string) (string, error) {
 
 	logDir := path.Join(homeDir, ".customC2")
 
+	listenerLog := path.Join(logDir, "last_run.ini")
+
 	sessionLog := path.Join(logDir, sessionId)
 
 	sessionDownloads := path.Join(sessionLog, "downloads")
@@ -37,6 +39,9 @@ func GetLogPath(sessionId string, logType string) (string, error) {
 		tr = logFile
 	case "d":
 		tr = sessionDownloads
+	case "l":
+		tr = listenerLog
+
 	}
 
 	return tr, nil
@@ -127,11 +132,6 @@ func GetSessionLog(sessionId string) (string, error) {
 	}
 
 	return string(fileBytes), nil
-}
-
-func Error_check(c string, e error) error {
-	log.Printf("%s : %v\n", c, e)
-	return e
 }
 
 func (s *Server) GetAndSetSession(ctx context.Context, sessionId string, newSession *pb.Session) (*pb.Session, error) {

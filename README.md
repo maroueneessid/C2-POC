@@ -18,6 +18,7 @@
 * Ensure you're not using a Redis instance with unbacked keys.
 
 * Add your server IP or DNS name to `utils/cert/openssl.cnf`.
+* `make all`
 * Start `./server/bin/server`.
 * Start manager. use `help` to get command manual
 * Start `asset` on however many Linux/Windows endpoints you want , should be handled.
@@ -25,7 +26,7 @@
 
 ### Project Structure ###
 
-* Self Explanatory
+* TODO
 
 ### Notes ###
 
@@ -36,8 +37,6 @@
 * Add Log Propagation/Sync between Server and Managers. Rsync? comes after manager auth
 
 * Add Manager Authentication. mTLS
-
-* Make Listeners persistent accross Server Restarts
 
 
 
