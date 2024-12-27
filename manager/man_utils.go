@@ -10,36 +10,6 @@ import (
 	"time"
 )
 
-func Ping(client pb.AssetServiceClient) bool {
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-
-	checkIn := &pb.AssetResponse{
-		SessionId: "manager",
-		Out: &pb.TaskIO{
-			Text:   "",
-			Binary: []byte{},
-		},
-	}
-
-	pinged, _ := client.CheckIn(ctx, checkIn)
-
-	defer cancel()
-
-	select {
-	case <-ctx.Done():
-		log.Fatalf(Red+"[-] Server shutdown: %v"+Reset, ctx.Err())
-		return false
-	default:
-		if pinged.In.Text == "Ping" {
-			return true
-		}
-
-	}
-
-	return false
-}
-
 func GetNotified(client pb_man.ManagerAssetClient) {
 
 	ctx, cancel := context.WithCancel(context.Background())
