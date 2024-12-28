@@ -7,7 +7,6 @@ import (
 	"log"
 	pb "simpleGRPC/proto_defs/common"
 	pb_man "simpleGRPC/proto_defs/manager"
-	"time"
 )
 
 func GetNotified(client pb_man.ManagerAssetClient) {
