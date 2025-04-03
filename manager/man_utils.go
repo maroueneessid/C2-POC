@@ -44,6 +44,7 @@ func ErrorCheck(context string, err error) {
 func BuildOrder(cmd string, binContent []byte) *pb.ServerOrder {
 
 	if binContent == nil || len(binContent) == 0 {
+
 		return &pb.ServerOrder{
 			SessionId: session,
 			In: &pb.TaskIO{

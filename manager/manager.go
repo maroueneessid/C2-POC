@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"log"
 	"os"
 	pb "simpleGRPC/proto_defs/common"
@@ -33,9 +34,24 @@ var kacp = keepalive.ClientParameters{
 var session string = ""
 var cli string = "Enter 'help' for more commands:\n" + Yellow + "[!] session: %s\n" + Reset + ">>"
 
+type tokenAuth struct {
+	token string
+}
+
+func (t *tokenAuth) GetRequestMetadata(ctx context.Context, uri ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": "Bearer " + t.token,
+	}, nil
+}
+
+func (t *tokenAuth) RequireTransportSecurity() bool {
+	return true
+}
+
 func main() {
 
 	host := flag.String("host", "localhost:9001", "Server to connect to. In format host:port")
+	token := flag.String("token", "", "Token for manager authentication")
 	flag.Parse()
 	flag.Usage()
 
@@ -48,6 +64,7 @@ func main() {
 	}
 	conn, err := grpc.NewClient(*host,
 		grpc.WithTransportCredentials(tlsCred),
+		grpc.WithPerRPCCredentials(&tokenAuth{token: *token}),
 		grpc.WithKeepaliveParams(kacp),
 	)
 

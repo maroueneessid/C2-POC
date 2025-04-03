@@ -26,7 +26,7 @@ var session string = ""
 
 func main() {
 
-	connUrl := flag.String("host", "localhost:9001", "host to connect to. In format host:port")
+	connUrl := flag.String("host", "localhost:8080", "host to connect to. In format host:port")
 
 	flag.Parse()
 	flag.Usage()
@@ -52,7 +52,11 @@ func main() {
 
 	Error_check("[-] Error generating registration form", err)
 
-	r, _ := c.RegisterAsset(ctx, registration)
+	r, err := c.RegisterAsset(ctx, registration)
+
+	if err != nil {
+		log.Fatal("[-] No response to the form was received")
+	}
 
 	if !r.Confirmed {
 		os.Exit(0)

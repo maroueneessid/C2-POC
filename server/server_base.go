@@ -9,6 +9,7 @@ import (
 	"simpleGRPC/utils"
 	"sync"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
 	"github.com/redis/go-redis/v9"
 	"google.golang.org/grpc"
 )
@@ -102,7 +103,13 @@ func InitGrpcConfig(notifs chan *pb_man.Notification) grpcConfig {
 
 	}
 
-	grpcServer := grpc.NewServer(grpc.Creds(tlsCred), grpc.KeepaliveEnforcementPolicy(kaep), grpc.KeepaliveParams(kasp))
+	grpcServer := grpc.NewServer(
+		grpc.Creds(tlsCred),
+		grpc.KeepaliveEnforcementPolicy(kaep),
+		grpc.KeepaliveParams(kasp),
+		grpc.ChainUnaryInterceptor(auth.UnaryServerInterceptor(AuthFn)),
+		grpc.ChainStreamInterceptor(auth.StreamServerInterceptor(AuthFn)),
+	)
 
 	serverConfig := &Server{db: redisClient, notifs: notifs}
 

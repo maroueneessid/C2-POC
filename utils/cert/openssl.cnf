@@ -21,7 +21,7 @@ subjectAltName = @alt_names
 DNS.1 = localhost
 DNS.2 = 127.0.0.1
 DNS.3 = server.localgrpc.local
-IP.1 = 192.168.56.101
+IP.1 = 192.168.229.128
 
 
 

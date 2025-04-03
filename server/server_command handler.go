@@ -19,7 +19,7 @@ func ServerCommandHandler(conf grpcConfig, in string) {
 			os.Exit(0)
 		default:
 			fmt.Println("Unknown command. Please try again.")
-			continue
+			in = ""
 		}
 	}
 

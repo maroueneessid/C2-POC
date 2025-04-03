@@ -7,11 +7,15 @@ import (
 	pb "simpleGRPC/proto_defs/common"
 	pb_man "simpleGRPC/proto_defs/manager"
 	"time"
+
+	"google.golang.org/grpc/metadata"
 )
 
 func SendOrderFromManager(client pb_man.ManagerAssetClient, order *pb.ServerOrder) error {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+
+	metadata.AppendToOutgoingContext(ctx, "bearer", "yolo")
 	_, err := client.SendOrder(ctx, order)
 	if err != nil {
 		fmt.Println(Red+"Error executing command:"+Reset, err)
