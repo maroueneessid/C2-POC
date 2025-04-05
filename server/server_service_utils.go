@@ -65,21 +65,23 @@ func (s *Server) SendOrder(ctx context.Context, order *pb.ServerOrder) (*emptypb
 		return nil, status.Error(codes.Unauthenticated, "missing auth token")
 	}
 
-	LogTasks(order.SessionId, "in", order.In.Text, token)
-
 	session, err := s.GetAndSetSession(ctx, order.SessionId, nil)
 	if err != nil {
 		log.Printf("Failed to get Session from Redis for SessionId %s: %v", order.SessionId, err)
+		return nil, status.Error(codes.Unknown, "Session does not exist")
 	}
 
-	session.Task.In = order.In
+	LogTasks(order.SessionId, "in", order.In.Text, token)
+
 	if order.In.Text == "exit" {
 		session.Alive = false
 	}
+	session.Task.In = order.In
 
 	_, err = s.GetAndSetSession(ctx, order.SessionId, session)
 	if err != nil {
 		log.Printf("Failed to update Session: %v", err)
+		return nil, status.Error(codes.Aborted, "Session does not exist")
 	}
 
 	return &emptypb.Empty{}, nil

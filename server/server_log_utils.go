@@ -144,8 +144,17 @@ func GetSessionLog(sessionId string) (string, error) {
 
 func (s *Server) GetAndSetSession(ctx context.Context, sessionId string, newSession *pb.Session) (*pb.Session, error) {
 
+	if newSession != nil {
+		newSerializedSession, err := proto.Marshal(newSession)
+		if err != nil {
+			return nil, fmt.Errorf("failed to serialize Session: %v", err)
+		}
+		s.db.Set(ctx, sessionId, newSerializedSession, 0)
+	}
+
 	serializedSession, err := s.db.Get(ctx, sessionId).Result()
-	if err != nil && err != redis.Nil {
+	if err != nil && err == redis.Nil {
+		//log.Fatalf("failed to get Session from Redis for SessionId :%v", err)
 		return nil, fmt.Errorf("failed to get Session from Redis for SessionId %s: %v", sessionId, err)
 	}
 
@@ -155,14 +164,6 @@ func (s *Server) GetAndSetSession(ctx context.Context, sessionId string, newSess
 		if err != nil {
 			return nil, fmt.Errorf("failed to unmarshal Session: %v", err)
 		}
-	}
-
-	if newSession != nil {
-		newSerializedSession, err := proto.Marshal(newSession)
-		if err != nil {
-			return nil, fmt.Errorf("failed to serialize Session: %v", err)
-		}
-		s.db.Set(ctx, sessionId, newSerializedSession, 0)
 	}
 
 	return &session, nil

@@ -1,0 +1,6 @@
+*.exe
+*.elf
+*.crt
+*.csr
+*.key
+
