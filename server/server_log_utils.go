@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -24,7 +25,7 @@ func GetLogPath(sessionId string, logType string) (string, error) {
 
 	logDir := path.Join(homeDir, ".customC2")
 
-	listenerLog := path.Join(logDir, "last_run.ini")
+	listenerLog := path.Join(logDir, ConfigFileName)
 
 	sessionLog := path.Join(logDir, sessionId)
 
@@ -59,7 +60,7 @@ func (s *Server) GetHistory(ctx context.Context, query *pb_man.HistoryQuery) (*p
 
 }
 
-func LogTasks(sessionId string, taskType string, taskIO string) error {
+func LogTasks(sessionId string, taskType string, taskIO string, operatorToken string) error {
 	taskInSign := "<-"
 	taskOutSign := "->"
 
@@ -93,8 +94,15 @@ func LogTasks(sessionId string, taskType string, taskIO string) error {
 	defer f.Close()
 
 	log.SetOutput(f)
+
+	operator := ""
+	for name, tok := range OpConf.Operators {
+		if bytes.Equal([]byte(operatorToken), []byte(tok)) {
+			operator = name
+		}
+	}
 	if taskType == "in" {
-		log.Println(taskInSign + " " + taskIO)
+		log.Println("<" + operator + "> :\n" + taskInSign + " " + taskIO)
 	} else if taskType == "out" {
 		log.Println(taskOutSign + " " + taskIO)
 	}

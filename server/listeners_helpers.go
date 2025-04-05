@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"path"
 	pb_man "simpleGRPC/proto_defs/manager"
@@ -41,15 +42,12 @@ func InitPortPersistenceConfig(s *Server) error {
 		return fmt.Errorf("failed to get home directory: %v", err)
 	}
 
-	last_run := "last_run.ini"
-
 	logDir := path.Join(homeDir, ".customC2")
+	lastRunPath := path.Join(logDir, ConfigFileName)
 
-	last_run_full_path := path.Join(logDir, last_run)
-
-	f, err := os.OpenFile(last_run_full_path, os.O_RDWR|os.O_CREATE, 0644)
+	f, err := os.OpenFile(lastRunPath, os.O_RDWR|os.O_CREATE, 0644)
 	if err != nil {
-		return fmt.Errorf("%v", err)
+		return fmt.Errorf("failed to open config file: %v", err)
 	}
 	defer f.Close()
 
@@ -59,19 +57,50 @@ func InitPortPersistenceConfig(s *Server) error {
 	}
 
 	if fileInfo.Size() == 0 {
+		// First run: save empty/default config
+		initialData := struct {
+			PersistentListeners *PersistentListenersConf `json:"persistentListeners"`
+			OperatorsConf       *OperatorsConf           `json:"operatorsConf"`
+		}{
+			PersistentListeners: PersistentListeners,
+			OperatorsConf:       OpConf,
+		}
+
 		encoder := json.NewEncoder(f)
-		if err := encoder.Encode(PersistentListeners); err != nil {
+		if err := encoder.Encode(initialData); err != nil {
 			return fmt.Errorf("failed to write default config to file: %v", err)
 		}
+		fmt.Println("[*] Created default config file")
+		return fmt.Errorf("initial config created; please edit and restart")
 	}
 
-	jsonParser := json.NewDecoder(f)
-	jsonParser.Decode(&PersistentListeners)
+	// Decode existing config
+	decoder := json.NewDecoder(f)
+	var rawConf struct {
+		PersistentListeners *PersistentListenersConf `json:"persistentListeners"`
+		OperatorsConf       *OperatorsConf           `json:"operatorsConf"`
+	}
+	if err := decoder.Decode(&rawConf); err != nil {
+		return fmt.Errorf("failed to decode config: %v", err)
+	}
 
-	fmt.Printf(Yellow+"[!] Found %d Listener from last run\n"+Reset, len(PersistentListeners.Ports))
+	// Apply config
+	if rawConf.PersistentListeners != nil {
+		PersistentListeners = rawConf.PersistentListeners
+	} else {
+		return fmt.Errorf("missing persistentListeners section in config")
+	}
+
+	if rawConf.OperatorsConf != nil && len(rawConf.OperatorsConf.Operators) > 0 {
+		OpConf = rawConf.OperatorsConf
+	} else {
+		log.Fatal("[X] Invalid or missing operator configuration. Must specify at least one operator.")
+	}
+
+	fmt.Printf(Yellow+"[!] Found %d Listener(s) from last run\n"+Reset, len(PersistentListeners.Ports))
 
 	for _, port := range PersistentListeners.Ports {
-		fmt.Printf(Yellow+"On %d\n"+Reset, port)
+		fmt.Printf(Yellow+"    * Port %d\n"+Reset, port)
 		s.StartNewListener(context.Background(), &pb_man.Listener{Port: uint32(port)})
 	}
 
@@ -79,31 +108,44 @@ func InitPortPersistenceConfig(s *Server) error {
 }
 
 func UpdatePortPersistenceConfig() error {
-
 	logPath, err := GetLogPath("", "l")
 	if err != nil {
 		return fmt.Errorf("failed to get port persistence logs: %v", err)
 	}
-	f, err := os.OpenFile(logPath, os.O_RDWR, 0644)
+
+	// Step 1: Read existing config
+	fileData, err := os.ReadFile(logPath)
 	if err != nil {
-		return fmt.Errorf("failed to get port persistence logs: %v", err)
+		return fmt.Errorf("failed to read config: %v", err)
 	}
 
-	encoder := json.NewEncoder(f)
+	var conf struct {
+		PersistentListeners *PersistentListenersConf `json:"persistentListeners"`
+		OperatorsConf       *OperatorsConf           `json:"operatorsConf"`
+	}
+
+	err = json.Unmarshal(fileData, &conf)
+	if err != nil {
+		return fmt.Errorf("failed to parse config: %v", err)
+	}
 
 	var updated []int
-
 	for k := range GlobalListeners {
 		updated = append(updated, k)
 	}
+	conf.PersistentListeners = &PersistentListenersConf{Ports: updated}
 
-	PersistentListeners.Ports = updated
-	err = encoder.Encode(PersistentListeners)
+	f, err := os.OpenFile(logPath, os.O_WRONLY|os.O_TRUNC, 0644)
 	if err != nil {
-		return fmt.Errorf("failed to get update persistence log: %v", err)
+		return fmt.Errorf("failed to open config for writing: %v", err)
 	}
-
 	defer f.Close()
+
+	encoder := json.NewEncoder(f)
+	encoder.SetIndent("", "  ")
+	if err := encoder.Encode(&conf); err != nil {
+		return fmt.Errorf("failed to write updated config: %v", err)
+	}
 
 	return nil
 }

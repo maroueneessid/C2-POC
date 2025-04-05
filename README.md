@@ -20,13 +20,10 @@
 * Add your server IP or DNS name to `utils/cert/openssl.cnf`.
 * `make all`
 * Start `./server/bin/server`.
-* Start manager. use `help` to get command manual
+* First Server run will create an empty config file at `~/.customC2/conf.ini`. It needs to be populated with at least one operator before trying to connect with the manager. No default provided on purpose.
+* Start `./manager/bin/manager -token <token_added_to_conf.ini>`. use `help` to get command manual
 * Start `asset` on however many Linux/Windows endpoints you want , should be handled.
 
-
-### Project Structure ###
-
-* TODO
 
 ### Notes ###
 
@@ -34,9 +31,6 @@
 
 ### TODO ###
 
-* Add Log Propagation/Sync between Server and Managers. Rsync? comes after manager auth
-
-* Add Manager Authentication. mTLS
-
+* Add Log Propagation/Sync between Server and Managers. Rsync?
 
 

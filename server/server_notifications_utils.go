@@ -8,7 +8,6 @@ func (s *Server) Subscribe(req *pb_man.Notification, stream pb_man.ManagerAsset_
 
 	for {
 		select {
-
 		case <-stream.Context().Done():
 			return stream.Context().Err()
 

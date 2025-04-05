@@ -8,6 +8,9 @@ import (
 	pb "simpleGRPC/proto_defs/common"
 	pb_man "simpleGRPC/proto_defs/manager"
 
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -57,7 +60,12 @@ func (s *Server) RegisterAsset(ctx context.Context, assetRegistration *pb.AssetR
 
 func (s *Server) SendOrder(ctx context.Context, order *pb.ServerOrder) (*emptypb.Empty, error) {
 
-	LogTasks(order.SessionId, "in", order.In.Text)
+	token, err := auth.AuthFromMD(ctx, "bearer")
+	if err != nil {
+		return nil, status.Error(codes.Unauthenticated, "missing auth token")
+	}
+
+	LogTasks(order.SessionId, "in", order.In.Text, token)
 
 	session, err := s.GetAndSetSession(ctx, order.SessionId, nil)
 	if err != nil {
@@ -81,7 +89,8 @@ func (s *Server) SendResponse(ctx context.Context, response *pb.AssetResponse) (
 	if response.Out.Text != "" {
 
 		//fmt.Println(Yellow, "[!] Received output\n", Reset, response.Out.Text)
-		LogTasks(response.SessionId, "out", response.Out.Text)
+		// dont't care for operatorToken in output
+		LogTasks(response.SessionId, "out", response.Out.Text, "")
 		notif := &pb_man.Notification{
 			SessionId: response.SessionId,
 			Notif:     "Returned Task Output from ",

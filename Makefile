@@ -16,16 +16,16 @@ flush_redis:
 	redis-cli --scan --pattern '*' | xargs redis-cli DEL
 
 asset_agent:
-	go clean -cache
+	#go clean -cache
 	go build -o asset/bin/asset asset/*.go
 	GOOS=windows GOARCH=amd64 go build -o asset/bin/asset.exe  asset/*.go
 
 c2s:
-	go clean -cache
+	#go clean -cache
 	go build -o server/bin/server server/*.go
 
 c2s_manager:
-	go clean -cache 
+	#go clean -cache 
 	go build -o manager/bin/manager manager/*.go
 
 cert_gen :

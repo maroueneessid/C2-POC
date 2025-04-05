@@ -11,6 +11,10 @@ import (
 )
 
 const (
+	ConfigFileName = "conf.ini"
+)
+
+const (
 	GLOBAL_PORT       = 9001
 	Red               = "\033[31m"
 	Green             = "\033[32m"
@@ -36,6 +40,10 @@ type PersistentListenersConf struct {
 	Ports []int `json:"ports"`
 }
 
+type OperatorsConf struct {
+	Operators map[string]string `json:"operators"`
+}
+
 var (
 
 	// this initial config will be "inherited"
@@ -48,6 +56,8 @@ var (
 	GlobalListeners map[int]chan bool
 
 	PersistentListeners = &PersistentListenersConf{Ports: []int{}}
+
+	OpConf = &OperatorsConf{Operators: map[string]string{}}
 
 	kaep = keepalive.EnforcementPolicy{
 		MinTime:             5 * time.Second, // If a client pings more than once every 5 seconds, terminate the connection
