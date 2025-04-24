@@ -31,6 +31,6 @@
 
 ### TODO ###
 
-* Add Log Propagation/Sync between Server and Managers. Rsync?
+* Synchronize Downloads between server and managers. Add a streaming service for downloads.
 
 
